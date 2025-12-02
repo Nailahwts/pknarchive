@@ -1,6 +1,22 @@
 <?php
+// Pengaturan cookie yang aman
+$cookieParams = session_get_cookie_params();
+session_set_cookie_params([
+    'lifetime' => $cookieParams['lifetime'],
+    'path' => $cookieParams['path'],
+    'domain' => $cookieParams['domain'],
+    'secure' => isset($_SERVER['HTTPS']),
+    'httponly' => true,
+    'samesite' => 'Strict'
+]);
+
 session_start();
-include 'koneksi.php';
+require_once 'koneksi.php';
+
+// Security headers
+header("Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; form-action 'self';");
+header("X-Frame-Options: DENY");
+header("X-Content-Type-Options: nosniff");
 
 // Jika sudah login, redirect
 if (isset($_SESSION['id_user'])) {
@@ -9,18 +25,22 @@ if (isset($_SESSION['id_user'])) {
 }
 
 $error = '';
+$success = '';
 
 // PROSES REGISTRASI
-if (isset($_POST['daftar'])) {
-    $nama_lengkap = clean_input($_POST['nama_lengkap']);
-    $username = clean_input($_POST['username']);
-    $password = $_POST['password'];
-    $password_confirm = $_POST['password_confirm'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['daftar'])) {
+    $nama_lengkap = isset($_POST['nama_lengkap']) ? trim($_POST['nama_lengkap']) : '';
+    $username = isset($_POST['username']) ? trim($_POST['username']) : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
+    $password_confirm = isset($_POST['password_confirm']) ? $_POST['password_confirm'] : '';
     
     // Validasi input
     if (empty($nama_lengkap) || empty($username) || empty($password)) {
         $error = 'Semua field wajib diisi!';
     } 
+    elseif (strlen($username) < 4) {
+        $error = 'Username minimal 4 karakter!';
+    }
     elseif (strlen($password) < 6) {
         $error = 'Password minimal 6 karakter!';
     }
@@ -29,23 +49,48 @@ if (isset($_POST['daftar'])) {
     }
     else {
         // Cek username sudah ada atau belum
-        $query_check = "SELECT id_user FROM tb_user WHERE username = ?";
-        $result_check = db_select($koneksi, $query_check, "s", [$username]);
+        $query_check = "SELECT id_user FROM tb_user WHERE username = ? LIMIT 1";
+        $stmt_check = mysqli_prepare($koneksi, $query_check);
         
-        if ($result_check && mysqli_num_rows($result_check) > 0) {
-            $error = 'Username sudah digunakan!';
-        } else {
-            // Hash password
-            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+        if ($stmt_check) {
+            mysqli_stmt_bind_param($stmt_check, "s", $username);
+            mysqli_stmt_execute($stmt_check);
+            $result_check = mysqli_stmt_get_result($stmt_check);
             
-            // Insert user baru dengan role 'user'
-            $query = "INSERT INTO tb_user (nama_lengkap, username, password, role) VALUES (?, ?, ?, 'user')";
-            if (db_execute($koneksi, $query, "sss", [$nama_lengkap, $username, $password_hash])) {
-                header('Location: login.php?register=success');
-                exit;
+            if ($result_check && mysqli_num_rows($result_check) > 0) {
+                $error = 'Username sudah digunakan! Silakan pilih username lain.';
+                mysqli_stmt_close($stmt_check);
             } else {
-                $error = 'Gagal mendaftar. Silakan coba lagi.';
+                mysqli_stmt_close($stmt_check);
+                
+                // Hash password
+                $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                
+                // Insert user baru dengan role 'user'
+                $query = "INSERT INTO tb_user (nama_lengkap, username, password, role) VALUES (?, ?, ?, 'user')";
+                $stmt = mysqli_prepare($koneksi, $query);
+                
+                if ($stmt) {
+                    mysqli_stmt_bind_param($stmt, "sss", $nama_lengkap, $username, $password_hash);
+                    
+                    if (mysqli_stmt_execute($stmt)) {
+                        mysqli_stmt_close($stmt);
+                        mysqli_close($koneksi);
+                        
+                        // Set pesan success di session
+                        $_SESSION['register_success'] = 'Registrasi berhasil! Silakan login dengan akun Anda.';
+                        header('Location: login.php');
+                        exit;
+                    } else {
+                        $error = 'Gagal mendaftar. Silakan coba lagi.';
+                        mysqli_stmt_close($stmt);
+                    }
+                } else {
+                    $error = 'Terjadi kesalahan sistem. Silakan coba lagi.';
+                }
             }
+        } else {
+            $error = 'Terjadi kesalahan sistem. Silakan coba lagi.';
         }
     }
 }
@@ -68,17 +113,22 @@ if (isset($_POST['daftar'])) {
             justify-content: center;
             min-height: 100vh;
             font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
         }
         .register-container {
             max-width: 450px;
             width: 100%;
-            padding: 20px;
         }
         .register-card {
             background: #ffffff;
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
             overflow: hidden;
+            animation: slideUp 0.6s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .register-header {
             background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
@@ -92,6 +142,10 @@ if (isset($_POST['daftar'])) {
         }
         .register-body {
             padding: 30px;
+        }
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
         }
         .btn-register {
             background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
@@ -107,6 +161,8 @@ if (isset($_POST['daftar'])) {
         .login-link {
             text-align: center;
             margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
         }
         .login-link a {
             font-weight: 600;
@@ -115,6 +171,14 @@ if (isset($_POST['daftar'])) {
         }
         .login-link a:hover {
             text-decoration: underline;
+        }
+        .alert {
+            border-radius: 10px;
+        }
+        @media (max-width: 576px) {
+            .register-body {
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -131,32 +195,53 @@ if (isset($_POST['daftar'])) {
             <div class="register-body">
                 <?php if (!empty($error)) : ?>
                     <div class="alert alert-danger alert-dismissible fade show">
-                        <i class="fas fa-exclamation-circle"></i> <?php echo $error; ?>
+                        <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($success)) : ?>
+                    <div class="alert alert-success alert-dismissible fade show">
+                        <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($success); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
 
                 <form method="POST" action="register.php">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Nama Lengkap</label>
-                        <input type="text" name="nama_lengkap" class="form-control" required autofocus>
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-user"></i> Nama Lengkap
+                        </label>
+                        <input type="text" name="nama_lengkap" class="form-control" 
+                               placeholder="Masukkan nama lengkap" required autofocus
+                               value="<?php echo isset($_POST['nama_lengkap']) ? htmlspecialchars($_POST['nama_lengkap']) : ''; ?>">
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Username</label>
-                        <input type="text" name="username" class="form-control" required>
-                        <small class="text-muted">Username akan digunakan untuk login</small>
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-at"></i> Username
+                        </label>
+                        <input type="text" name="username" class="form-control" 
+                               placeholder="Masukkan username" minlength="4" required
+                               value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>">
+                        <small class="text-muted">Minimal 4 karakter, digunakan untuk login</small>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Password</label>
-                        <input type="password" name="password" class="form-control" minlength="6" required>
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-lock"></i> Password
+                        </label>
+                        <input type="password" name="password" class="form-control" 
+                               placeholder="Masukkan password" minlength="6" required>
                         <small class="text-muted">Minimal 6 karakter</small>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Konfirmasi Password</label>
-                        <input type="password" name="password_confirm" class="form-control" minlength="6" required>
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-lock"></i> Konfirmasi Password
+                        </label>
+                        <input type="password" name="password_confirm" class="form-control" 
+                               placeholder="Ulangi password" minlength="6" required>
                     </div>
 
                     <button type="submit" name="daftar" class="btn btn-primary btn-register w-100">
@@ -166,7 +251,7 @@ if (isset($_POST['daftar'])) {
 
                 <div class="login-link">
                     Sudah punya akun?
-                    <a href="login.php">Login di sini</a>
+                    <a href="login.php"><i class="fas fa-sign-in-alt"></i> Login di sini</a>
                 </div>
             </div>
         </div>

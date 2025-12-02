@@ -67,7 +67,8 @@ $error_code = filter_input(INPUT_GET, 'error', FILTER_SANITIZE_SPECIAL_CHARS);
         .login-header::after {
             content: ''; position: absolute; bottom: 0; left: 50%;
             transform: translateX(-50%); width: 80%; height: 3px;
-            background: #0d6efd; border-radius: 10px;
+            backgr
+            ound: #0d6efd; border-radius: 10px;
         }
         .login-header i { font-size: 50px; margin-bottom: 15px; color: #4dabf7; }
         .login-header h2 { font-size: 28px; font-weight: 700; margin-bottom: 5px; }
