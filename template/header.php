@@ -4,12 +4,36 @@ if (!isset($koneksi)) {
 }
 
 cek_login();
+
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+header('X-XSS-Protection: 1; mode=block');
+
+// Regenerate Session ID (mencegah session hijack)
+if (!isset($_SESSION['regenerated'])) {
+    session_regenerate_id(true);
+    $_SESSION['regenerated'] = true;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self' data: blob: https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com;
+                script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';
+                style-src 'self' https://cdnjs.cloudflare.com https://fonts.googleapis.com 'unsafe-inline';
+                font-src 'self' https://fonts.gstatic.com data:;
+                img-src 'self' data: blob:;
+                object-src 'none';
+                frame-ancestors 'self';
+                ">
+
     <title><?php echo isset($page_title) ? $page_title : 'Sistem Arsip Surat'; ?></title>
     
     <link rel="stylesheet" href="assets/css/style.css">
