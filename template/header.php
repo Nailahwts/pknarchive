@@ -23,16 +23,6 @@ if (!isset($_SESSION['regenerated'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="Content-Security-Policy" 
-        content="default-src 'self' data: blob: https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com;
-                script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';
-                style-src 'self' https://cdnjs.cloudflare.com https://fonts.googleapis.com 'unsafe-inline';
-                font-src 'self' https://fonts.gstatic.com data:;
-                img-src 'self' data: blob:;
-                object-src 'none';
-                frame-ancestors 'self';
-                ">
 
     <title><?php echo isset($page_title) ? $page_title : 'Sistem Arsip Surat'; ?></title>
     
@@ -108,13 +98,7 @@ if (!isset($_SESSION['regenerated'])) {
                     <li><a href="kontrak_staf.php"><i class="fas fa-user-tie"></i> Kontrak Staf Administrasi</a></li>
                 </ul>
             </li>
-
-            <li>
-                <a href="pinjaman_modal.php">
-                    <i class="fas fa-money-bill-wave"></i> Pinjaman Modal
-                </a>
-            </li>
-
+            
             <li>
                 <a href="#" class="dropdown-toggle-custom">
                     <i class="fas fa-heartbeat"></i> Kesehatan
@@ -124,6 +108,12 @@ if (!isset($_SESSION['regenerated'])) {
                     <li><a href="peserta.php"><i class="fas fa-users"></i> Data Peserta</a></li>
                     <li><a href="pemeriksaan.php"><i class="fas fa-stethoscope"></i> Data Pemeriksaan</a></li>
                 </ul>
+            </li>
+
+            <li>
+                <a href="pinjaman_modal.php">
+                    <i class="fas fa-money-bill-wave"></i> Pinjaman Modal
+                </a>
             </li>
 
             <hr class="sidebar-divider">

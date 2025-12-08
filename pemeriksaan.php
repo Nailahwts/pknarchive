@@ -245,16 +245,6 @@ echo '
                     </div>
                 </div>
                 
-                <div class="alert alert-info mt-3">
-                    <strong><i class="fas fa-info-circle"></i> Nilai Normal:</strong>
-                    <ul class="mb-0 mt-2">
-                        <li><strong>Tensi:</strong> 120/80 mmHg (normal), >140/90 (hipertensi)</li>
-                        <li><strong>GDP:</strong> 70-100 mg/dL (normal), >126 (diabetes)</li>
-                        <li><strong>Asam Urat:</strong> Pria: 3.4-7.0 mg/dL, Wanita: 2.4-6.0 mg/dL</li>
-                        <li><strong>Kolesterol:</strong> <200 mg/dL (baik), 200-239 (batas), ≥240 (tinggi)</li>
-                    </ul>
-                </div>
-                
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i> Simpan Data
