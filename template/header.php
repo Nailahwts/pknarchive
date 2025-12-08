@@ -91,6 +91,17 @@ cek_login();
                 </a>
             </li>
 
+            <li>
+                <a href="#" class="dropdown-toggle-custom">
+                    <i class="fas fa-heartbeat"></i> Kesehatan
+                    <span class="arrow">▼</span>
+                </a>
+                <ul class="submenu">
+                    <li><a href="peserta.php"><i class="fas fa-users"></i> Data Peserta</a></li>
+                    <li><a href="pemeriksaan.php"><i class="fas fa-stethoscope"></i> Data Pemeriksaan</a></li>
+                </ul>
+            </li>
+
             <hr class="sidebar-divider">
 
             <li>
